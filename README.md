@@ -23,3 +23,4 @@
   
   ## Screenshots  
   ![App Screenshot](./screenshots/sim.png)  
+  ![App Screenshot](./screenshots/window.png)  

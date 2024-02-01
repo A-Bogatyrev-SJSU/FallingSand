@@ -1,21 +1,32 @@
 
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.Timer;
+import javax.swing.JSlider;
+import javax.swing.UIManager;
+//import javax.swing.Timer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.MouseInfo;
+//import java.awt.Graphics;
+//import java.awt.Image;
+//import java.awt.MouseInfo;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.util.HashMap;
+
+//import java.awt.event.MouseEvent;
+//import java.awt.event.MouseListener;
+//import java.awt.image.BufferedImage;
+//import java.awt.image.DataBufferInt;
+//import java.util.HashMap;
 import java.util.Map;
+//import java.util.Map;
 
 public class FallingSand {
 	private JFrame window;
@@ -24,15 +35,76 @@ public class FallingSand {
 	private int height = 720, width = 1020;
 
 	public FallingSand() {
-		window = new JFrame("My Frame");
-		drawingPanel = new ImagePanel();
+		window = new JFrame("Falling Sand");
+		drawingPanel = new ImagePanel(width, height);
 
-		drawingPanel.setSize(width, height);
-		drawingPanel.setPreferredSize(new Dimension(width, height));
+		// drawingPanel.setSize(width, height);
+		// drawingPanel.setPreferredSize(new Dimension(width, height));
 //		window.setSize(width, height);
 //		window.setPreferredSize(new Dimension(width, height));
+		window.setLayout(new BorderLayout());
+		window.add(drawingPanel, BorderLayout.CENTER);
 
-		window.add(drawingPanel);
+		// Button for sim
+		JButton pause = new JButton("Running");
+		pause.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				drawingPanel.cycleSimulationStatus();
+				pause.setText(drawingPanel.getSimulationStatus() ? "Running" : "Stopped");
+			}
+		});
+		pause.setVisible(true);
+		// window.add(pause, BorderLayout.NORTH);
+
+		JLabel radiusLabel = new JLabel("Brush Radius: 25");
+
+		JSlider radiusSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 25);
+		radiusSlider.setMajorTickSpacing(10);
+		radiusSlider.setMinorTickSpacing(1);
+		radiusSlider.setPaintTicks(true);
+		radiusSlider.setPaintLabels(true);
+
+		radiusSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				int value = ((JSlider) e.getSource()).getValue();
+				drawingPanel.setSandSpawnRadius(value);
+				radiusLabel.setText("Brush Radius: " + value);
+			}
+		});
+		radiusLabel.setVisible(true);
+		radiusLabel.setHorizontalAlignment(JLabel.CENTER);
+
+		JLabel densityLabel = new JLabel("Density:" + .96);
+		densityLabel.setHorizontalAlignment(JLabel.CENTER);
+		JSlider densitySlider = createDensitySlider(drawingPanel, densityLabel);
+
+		JLabel startStopLabel = new JLabel("Start / Stop Simulation");
+		startStopLabel.setHorizontalAlignment(JLabel.CENTER);
+
+		JLabel controlsLabel = new JLabel("Controls");
+		controlsLabel.setFont(new Font(UIManager.getDefaults().getFont("Label.font").getName(), Font.BOLD, 30));
+		controlsLabel.setHorizontalAlignment(JLabel.CENTER);
+
+		JPanel controls = new JPanel(new GridLayout(5, 1));
+		JPanel startStopControlPanel = new JPanel(new GridLayout(3, 1));
+		JPanel radiusControlPanel = new JPanel(new GridLayout(3, 1));
+		JPanel densityControlPanel = new JPanel(new GridLayout(3, 1));
+
+		startStopControlPanel.add(startStopLabel);
+		startStopControlPanel.add(pause);
+
+		radiusControlPanel.add(radiusLabel);
+		radiusControlPanel.add(radiusSlider);
+
+		densityControlPanel.add(densityLabel);
+		densityControlPanel.add(densitySlider);
+
+		controls.add(controlsLabel);
+		controls.add(startStopControlPanel);
+		controls.add(radiusControlPanel);
+		controls.add(densityControlPanel);
+		
+		window.add(controls, BorderLayout.EAST);
 
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		window.pack();
@@ -40,210 +112,55 @@ public class FallingSand {
 
 	}
 
-	public static void main(String[] args) {
-		FallingSand fs = new FallingSand();
+	public JSlider createDensitySlider(ImagePanel drawingPanel, JLabel densityLabel) {
+		JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 14, 4);
+		slider.setMinorTickSpacing(1);
+		slider.setMajorTickSpacing(2);
+		slider.setPaintTicks(true);
+		slider.setPaintLabels(true);
+		slider.setSnapToTicks(true);
+
+		// Create a label table to display specific labels at certain ticks
+		java.util.HashMap<Integer, Double> values = new java.util.HashMap<Integer, Double>();
+		values.put(0, .0);
+		values.put(1, .0078125);
+		values.put(2, .015625);
+		values.put(3, .0234375);
+		values.put(4, .03125);
+		values.put(5, .046875);
+		values.put(6, .0625);
+		values.put(7, .09375);
+		values.put(8, .125);
+		values.put(9, .1875);
+		values.put(10, .25);
+		values.put(11, .375);
+		values.put(12, .5);
+		values.put(13, .75);
+		values.put(14, 1.);
+
+		java.util.Hashtable<Integer, JLabel> labelTable = new java.util.Hashtable<>();
+		for (Map.Entry<Integer, Double> entry : values.entrySet()) {
+			Integer key = entry.getKey();
+			Double val = entry.getValue();
+			if (key%4==0)
+				labelTable.put(key, new JLabel(String.format("%.3f", val)));
+		}
+		labelTable.put(14,new JLabel("1") );
+		slider.setLabelTable(labelTable);
+		
+		slider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				double value = values.get(slider.getValue());
+				densityLabel.setText(String.format("Density: %.3f", value));
+				drawingPanel.setSandSpawnDensity(1 - value);
+			}
+		});
+
+		return slider;
 	}
 
-	private class ImagePanel extends JPanel implements MouseListener {
-		private static final long serialVersionUID = 5897328252088027800L;
-
-		private int[] color;
-		// could use volatile image but then would have to rewrite buffered image
-		// specific code
-		BufferedImage im;
-
-		Timer t;
-		boolean sandSpawning = false;
-		int sandSpawnRadius = 25;
-
-		@SuppressWarnings("unused")
-		private enum Material {
-			AIR("Air", 0xFFFFFF), SAND("Sand", 0xFF0000), WATER("Water", 0x0000FF);
-
-			public final String label;
-			public final int color;
-
-			private static final Map<Integer, Material> BY_COLOR = new HashMap<>();
-
-			private Material(String label, int color) {
-				this.label = label;
-				this.color = color;
-			}
-
-			public static Material valueOfColor(int color) {
-				return BY_COLOR.get(color);
-			}
-		}
-
-		public ImagePanel() {
-			im = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-			color = new int[width * height];
-			for (int i = 0; i < color.length; i++) {
-				color[i] = Math.random() > .8 * (Math.abs(i % width - width / 2)) / ((double) height) + .5 ? Material.SAND.color : Material.AIR.color;
-			}
-			im.setRGB(0, 0, width, height, color, 0, width);
-
-			PixelMover pm = new PixelMover();
-
-			// timer was only at once ever 15 ms because of java limitations
-//			t = new Timer(0, pm);
-//			t.start();
-
-			this.addMouseListener(this);
-			this.repaint();
-
-			// this runs much faster (as fast as a single thread can run in java)
-			Runnable r = new Runnable() {
-				public void run() {
-					while (true) {
-						pm.processSand();
-					}
-				}
-			};
-			new Thread(r).start();
-
-		}
-
-		public void paintComponent(Graphics g) {
-			super.paintComponent(g);
-			// g.drawString("Hello World!", 100, 100);
-
-			// bad practice, just want to get this done
-			g.drawImage(im, 0, 0, null);
-		}
-
-		private class PixelMover implements ActionListener {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				processSand();
-			}
-
-			public void processSand() {
-				updateSand();
-
-				// If user clicks and holds, sand will spawn
-				if (sandSpawning) {
-					spawnSand();
-				}
-
-				// update image and repaint panel
-				im.setRGB(0, 0, width, height, color, 0, width);
-
-				// if (System.currentTimeMillis() % 5 == 0)
-				ImagePanel.this.repaint();
-			}
-
-			private void updateSand() {
-				int[] oldPixels = ((DataBufferInt) (im.getRaster().getDataBuffer())).getData();
-				for (int i = height - 1; i >= 0; i--) {
-					for (int k = width - 1; k >= 0; k--) {
-						int curPos = width * (i) + k;
-						int curCol = oldPixels[curPos];
-
-						// System.out.println("current: " + curPos + "\nmax: "+ (width * height - 1) +
-						// "\ni: " + i+"\nl: " + k);
-
-						// if not on the last row
-						if (i < height - 1 && curCol != Material.AIR.color) {
-							// System.out.println("");
-							boolean direction = false;
-
-							Integer l, ld, r, rd;
-							// all the pixels that need to be scanned
-							// □ ▣ □ = l cur r
-							// □ □ □ = ld d rd
-							// prioritizes down
-							// if down is not available, then sides are prioritized,
-							// however, will not move diagonally if there is a piece
-							// already falling
-
-							l = (k > 0) ? oldPixels[curPos - 1] : null;
-							ld = (k > 0) && i < height - 1 ? oldPixels[curPos - 1 + (1) * width] : null;
-							r = (k < width - 1) ? oldPixels[curPos + 1] : null;
-							rd = (k < width - 1) && i < height - 1 ? oldPixels[curPos + 1 + (1) * width] : null;
-
-							boolean leftEmpty = l != null && ld != null && l != Material.SAND.color && ld != Material.SAND.color;
-							boolean rightEmpty = r != null && rd != null && r != Material.SAND.color && rd != Material.SAND.color;
-
-							if (oldPixels[curPos + (1) * width] == Material.AIR.color) {
-								color[curPos] = Material.AIR.color;
-								color[curPos + (1) * width] = curCol;
-							} else if (leftEmpty && rightEmpty) {
-								// decide if particle should go left or right
-								color[curPos] = Material.AIR.color;
-								if (direction) {
-									color[curPos - 1 + (1) * width] = Material.SAND.color;
-								} else {
-									color[curPos + 1 + (1) * width] = Material.SAND.color;
-								}
-								direction = !direction;
-							} else if (leftEmpty) {
-								color[curPos] = Material.AIR.color;
-								color[curPos - 1 + (1) * width] = Material.SAND.color;
-							} else if (rightEmpty) {
-								color[curPos] = Material.AIR.color;
-								color[curPos + 1 + (1) * width] = Material.SAND.color;
-							}
-						}
-					}
-				}
-			}
-
-			private void spawnSand() {
-				var mloc = MouseInfo.getPointerInfo().getLocation();
-
-				// color[(mloc.y -
-				// ImagePanel.this.getLocationOnScreen().y)*width+(mloc.x-ImagePanel.this.getLocationOnScreen().x)]
-				// = Material.SAND.color;
-				int centerX = mloc.x - ImagePanel.this.getLocationOnScreen().x;
-				int centerY = mloc.y - ImagePanel.this.getLocationOnScreen().y;
-				// color[(centerY) * width + centerX] = Material.SAND.color;
-
-				for (int y = Math.max(0, centerY - sandSpawnRadius); y < Math.min(centerY + sandSpawnRadius, height); y++) {
-					for (int x = Math.max(0, centerX - sandSpawnRadius); x < Math.min(centerX + sandSpawnRadius, width); x++) {
-						if (isInsideCircle(x, y, centerX, centerY, sandSpawnRadius) & Math.random() > .96)
-							color[y * width + x] = Material.SAND.color;
-					}
-				}
-			}
-
-			private static boolean isInsideCircle(int x, int y, int centerX, int centerY, int radius) {
-				int dx = x - centerX;
-				int dy = y - centerY;
-				return dx * dx + dy * dy <= radius * radius;
-			}
-
-		}
-
-		@Override
-		public void mouseClicked(MouseEvent e) {
-		}
-
-		@Override
-		public void mousePressed(MouseEvent e) {
-			// System.out.println("Enabled sand spawning");
-			if (e.getButton() == MouseEvent.BUTTON1)
-				sandSpawning = true;
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			// System.out.println("Disabled sand spawning");
-			if (e.getButton() == MouseEvent.BUTTON1)
-				sandSpawning = false;
-		}
-
-		@Override
-		public void mouseEntered(MouseEvent e) {
-		}
-
-		@Override
-		public void mouseExited(MouseEvent e) {
-			// System.out.println("Disabled sand spawning");
-			sandSpawning = false;
-		}
+	public static void main(String[] args) {
+		FallingSand fs = new FallingSand();
 	}
 
 }
