@@ -19,7 +19,6 @@
   ``
   java FallingSand
   ``
-  ## Screenshots
   
   ## Screenshots  
   ![App Screenshot](./screenshots/sim.png)  
