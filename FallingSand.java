@@ -80,6 +80,14 @@ public class FallingSand {
 
 		JLabel startStopLabel = new JLabel("Start / Stop Simulation");
 		startStopLabel.setHorizontalAlignment(JLabel.CENTER);
+		
+		JButton clearButton = new JButton("Clear\nSimulation");
+		clearButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				drawingPanel.clearSimulation();
+			}
+		});
 
 		JLabel controlsLabel = new JLabel("Controls");
 		controlsLabel.setFont(new Font(UIManager.getDefaults().getFont("Label.font").getName(), Font.BOLD, 30));
@@ -103,7 +111,8 @@ public class FallingSand {
 		controls.add(startStopControlPanel);
 		controls.add(radiusControlPanel);
 		controls.add(densityControlPanel);
-		
+		controls.add(clearButton);
+
 		window.add(controls, BorderLayout.EAST);
 
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -142,12 +151,12 @@ public class FallingSand {
 		for (Map.Entry<Integer, Double> entry : values.entrySet()) {
 			Integer key = entry.getKey();
 			Double val = entry.getValue();
-			if (key%4==0)
+			if (key % 4 == 0)
 				labelTable.put(key, new JLabel(String.format("%.3f", val)));
 		}
-		labelTable.put(14,new JLabel("1") );
+		labelTable.put(14, new JLabel("1"));
 		slider.setLabelTable(labelTable);
-		
+
 		slider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				double value = values.get(slider.getValue());

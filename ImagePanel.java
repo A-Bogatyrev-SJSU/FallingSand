@@ -77,7 +77,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 		this.repaint();
 
 		// this runs much faster (as fast as a single thread can run in java)
-		//TODO do proper thread lock / unlock
+		// TODO do proper thread lock / unlock
 		Runnable r = new Runnable() {
 			public void run() {
 				while (getSimulationStatus()) {
@@ -235,7 +235,7 @@ public class ImagePanel extends JPanel implements MouseListener {
 	public synchronized boolean getSimulationStatus() {
 		return simRunning;
 	}
-	
+
 	/**
 	 * @return the sandSpawnRadius
 	 */
@@ -262,6 +262,21 @@ public class ImagePanel extends JPanel implements MouseListener {
 	 */
 	public void setSandSpawnDensity(double sandSpawnDensity) {
 		this.sandSpawnDensity = sandSpawnDensity;
+	}
+
+	public void clearSimulation() {
+		pauseSimulation();
+		for (int i = 0; i < color.length; i++) {
+			color[i] = Material.AIR.color;
+		}
+		this.repaint();
+		im.setRGB(0, 0, width, height, color, 0, width);
+		pm.updateSand();
+		for (int i = 0; i < color.length; i++) {
+			color[i] = Material.AIR.color;
+		}
+		im.setRGB(0, 0, width, height, color, 0, width);
+		resumeSimulation();
 	}
 
 	@Override
